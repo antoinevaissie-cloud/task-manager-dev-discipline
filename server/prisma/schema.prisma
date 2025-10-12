@@ -1,0 +1,36 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id        String   @id @default(cuid())
+  name      String
+  tasks     Task[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Task {
+  id             String   @id @default(cuid())
+  title          String
+  description    String?
+  status         String   @default("Open")
+  dueDate        DateTime @default(now())
+  urgency        String   @default("P3")
+  projectId      String?
+  project        Project? @relation(fields: [projectId], references: [id])
+  createdAt      DateTime @default(now())
+  completedDate  DateTime?
+  followUpItem   Boolean  @default(false)
+  url1           String?
+  url2           String?
+  url3           String?
+
+  @@index([dueDate])
+  @@index([status])
+}

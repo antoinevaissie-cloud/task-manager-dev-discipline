@@ -1,0 +1,40 @@
+{
+  "name": "task-manager-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node build/index.js",
+    "lint": "eslint \"src/**/*.{ts,tsx}\"",
+    "test": "jest --watch"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.9.1",
+    "cors": "^2.8.5",
+    "date-fns": "^3.1.0",
+    "dotenv": "^16.3.1",
+    "express": "^4.19.2",
+    "http-status-codes": "^2.3.0",
+    "node-cron": "^3.0.3",
+    "socket.io": "^4.7.5",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.18",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.10.5",
+    "@types/socket.io": "^3.0.2",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "jest": "^29.7.0",
+    "prisma": "^5.9.1",
+    "ts-jest": "^29.1.1",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "tsx": "^3.14.0",
+    "typescript": "^5.3.3"
+  }
+}
