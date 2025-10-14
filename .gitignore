@@ -6,3 +6,4 @@ server/dev.db
 server/prisma/dev.db
 *.log
 .DS_Store
+CREDENTIALS.md
