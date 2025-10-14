@@ -38,7 +38,12 @@ function App() {
 
       <main className="relative min-h-[calc(100vh-4rem)]">
         <TaskBoard onCreateTask={openCreateForm} onEditTask={openEditForm} />
-        <TaskFormDrawer open={isFormOpen} mode={formMode} task={taskToEdit ?? undefined} onClose={closeForm} />
+        <TaskFormDrawer
+          open={isFormOpen}
+          mode={formMode}
+          task={taskToEdit ?? undefined}
+          onClose={closeForm}
+        />
       </main>
     </div>
   );

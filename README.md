@@ -44,7 +44,10 @@ Rebuild of the AppSheet-based Task Manager as a full-stack application with a mo
   Buttons trigger priority adjustments, due-date shifts (tomorrow, +2 days, next Monday), and completion. Optimistic updates give instant feedback while syncing with the backend.
 
 - **Task Editing & Creation**  
-  Slide-in form drawer supports creating new tasks or editing existing ones (title, description, due date, urgency, follow-up flag, project, and reference links).
+  Slide-in form drawer supports creating new tasks or editing existing ones (title, description, due date, urgency, follow-up flag, project, and reference links). Projects can be created on the fly while linking a task.
+
+- **Search & Filters**  
+  Inline search plus a project dropdown help you focus on the most relevant open tasks.
 
 - **Realtime Updates**  
   Socket.IO keeps connected clients in sync—changes from one user broadcast globally.

@@ -1,5 +1,12 @@
 import api from '@/api/client';
-import type { Task, TaskActionType, Urgency, Project, TaskStatus } from '@/types/task';
+import type {
+  Task,
+  TaskActionType,
+  Urgency,
+  Project,
+  TaskStatus,
+  ProjectStatus,
+} from '@/types/task';
 
 export type FetchTasksParams = {
   status?: TaskStatus | 'All';
@@ -69,5 +76,16 @@ export async function deleteTask(taskId: string) {
 
 export async function fetchProjects() {
   const response = await api.get<{ data: Project[] }>('/projects');
+  return response.data.data;
+}
+
+export type CreateProjectPayload = {
+  name: string;
+  description?: string;
+  status?: ProjectStatus;
+};
+
+export async function createProject(payload: CreateProjectPayload) {
+  const response = await api.post<{ data: Project }>('/projects', payload);
   return response.data.data;
 }

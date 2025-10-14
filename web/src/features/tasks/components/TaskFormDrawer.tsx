@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { Task, Urgency } from '@/types/task';
+import type { Task, Urgency, Project } from '@/types/task';
 import { useCreateTask, useProjects, useUpdateTask } from '../hooks';
 import { format } from 'date-fns';
 import { FiX } from 'react-icons/fi';
+import ProjectCreateDrawer from './ProjectCreateDrawer';
 
 type TaskFormDrawerProps = {
   open: boolean;
@@ -41,6 +42,7 @@ function TaskFormDrawer({ open, mode, task, onClose }: TaskFormDrawerProps) {
   const { data: projects = [] } = useProjects();
   const createTask = useCreateTask();
   const updateTask = useUpdateTask(task?.id ?? '');
+  const [projectDrawerOpen, setProjectDrawerOpen] = useState(false);
 
   useEffect(() => {
     if (!open) {
@@ -62,12 +64,9 @@ function TaskFormDrawer({ open, mode, task, onClose }: TaskFormDrawerProps) {
         url3: task.url3 ?? '',
       });
     } else {
-      setForm((prev) => ({
-        ...DEFAULT_FORM,
-        projectId: projects.length === 0 ? '' : prev.projectId,
-      }));
+      setForm(DEFAULT_FORM);
     }
-  }, [open, mode, task, projects.length]);
+  }, [open, mode, task]);
 
   const isSubmitting = createTask.isPending || updateTask.isPending;
 
@@ -207,16 +206,36 @@ function TaskFormDrawer({ open, mode, task, onClose }: TaskFormDrawerProps) {
           <select
             id="projectId"
             value={form.projectId}
-            onChange={(event) => handleChange('projectId', event.target.value)}
+            onChange={(event) => {
+              const value = event.target.value;
+              if (value === '__create_project__') {
+                setProjectDrawerOpen(true);
+                return;
+              }
+              handleChange('projectId', value);
+            }}
             className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
           >
             <option value="">No project</option>
+            <option value="__create_project__">➕ Create new project…</option>
             {projects.map((project) => (
               <option value={project.id} key={project.id}>
                 {project.name}
               </option>
             ))}
           </select>
+          {form.projectId
+            ? (() => {
+                const project = projects.find((item) => item.id === form.projectId);
+                if (!project) return null;
+                return (
+                  <p className="mt-1 text-xs text-slate-500">
+                    {project.status}
+                    {project.description ? ` • ${project.description}` : ''}
+                  </p>
+                );
+              })()
+            : null}
         </div>
 
         <div className="flex items-center gap-2">
@@ -276,6 +295,13 @@ function TaskFormDrawer({ open, mode, task, onClose }: TaskFormDrawerProps) {
           </button>
         </div>
       </form>
+      <ProjectCreateDrawer
+        open={projectDrawerOpen}
+        onClose={() => setProjectDrawerOpen(false)}
+        onCreated={(project: Project) => {
+          setForm((prev) => ({ ...prev, projectId: project.id }));
+        }}
+      />
     </div>
   );
 }

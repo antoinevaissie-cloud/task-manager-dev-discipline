@@ -79,9 +79,19 @@ function TaskDetailDrawer({ task, onClose, onEdit }: TaskDetailDrawerProps) {
 
             <section>
               <p className="text-xs font-semibold uppercase text-slate-400">Project</p>
-              <p className="mt-1 text-sm text-slate-700">
-                {task.project?.name ?? task.projectId ?? '—'}
-              </p>
+              {task.project ? (
+                <div className="mt-1 space-y-1 text-sm text-slate-700">
+                  <p className="font-medium text-slate-800">{task.project.name}</p>
+                  <p className="text-xs uppercase tracking-wide text-slate-500">
+                    {task.project.status}
+                  </p>
+                  {task.project.description ? (
+                    <p className="text-sm text-slate-600">{task.project.description}</p>
+                  ) : null}
+                </div>
+              ) : (
+                <p className="mt-1 text-sm text-slate-500">No project linked.</p>
+              )}
             </section>
 
             <section className="space-y-2">

@@ -4,6 +4,7 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { createProject, listProjects } from '../services/projectService.js';
 
 const router = Router();
+const statusEnum = z.enum(['Open', 'In Progress', 'Completed']);
 
 router.get(
   '/',
@@ -16,8 +17,14 @@ router.get(
 router.post(
   '/',
   asyncHandler(async (req, res) => {
-    const payload = z.object({ name: z.string().min(1) }).parse(req.body);
-    const project = await createProject(payload.name);
+    const payload = z
+      .object({
+        name: z.string().min(1),
+        description: z.string().optional(),
+        status: statusEnum.optional(),
+      })
+      .parse(req.body);
+    const project = await createProject(payload);
     res.status(201).json({ data: project });
   }),
 );

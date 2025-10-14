@@ -16,9 +16,9 @@ type Urgency = (typeof URGENCY_SEQUENCE)[number];
 export type ListTasksOptions = {
   status?: 'Open' | 'Completed';
   search?: string;
-  projectId?: string;
-  from?: Date;
-  to?: Date;
+  projectId?: string | null;
+  from?: Date | null;
+  to?: Date | null;
 };
 
 const taskInclude = {
@@ -48,21 +48,49 @@ function assertTaskFound<T>(task: T | null, taskId: string): asserts task is T {
 export async function listTasks(options: ListTasksOptions = {}) {
   const { status = 'Open', search, projectId, from, to } = options;
 
+  const where: Prisma.TaskWhereInput = {
+    status,
+    projectId:
+      projectId === null
+        ? null
+        : projectId === undefined
+        ? undefined
+        : projectId,
+  };
+
+  if (from || to) {
+    where.dueDate = {
+      gte: from ?? undefined,
+      lte: to ?? undefined,
+    };
+  }
+
+  if (search) {
+    const trimmed = search.trim();
+    if (trimmed.length === 0) {
+      return prisma.task.findMany({
+        where,
+        include: taskInclude,
+        orderBy: [{ dueDate: 'asc' }, { urgency: 'asc' }, { createdAt: 'asc' }],
+      });
+    }
+
+    const containsFilter: Prisma.StringFilter = {
+      contains: trimmed,
+    };
+
+    where.OR = [
+      { title: containsFilter },
+      { description: containsFilter },
+      { project: { is: { name: containsFilter } } },
+      { url1: containsFilter },
+      { url2: containsFilter },
+      { url3: containsFilter },
+    ];
+  }
+
   return prisma.task.findMany({
-    where: {
-      status,
-      projectId: projectId ?? undefined,
-      title: search
-        ? {
-            contains: search,
-            mode: 'insensitive',
-          }
-        : undefined,
-      dueDate: {
-        gte: from,
-        lte: to,
-      },
-    },
+    where,
     include: taskInclude,
     orderBy: [{ dueDate: 'asc' }, { urgency: 'asc' }, { createdAt: 'asc' }],
   });

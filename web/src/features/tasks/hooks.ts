@@ -1,8 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { FetchTasksParams, CreateTaskPayload, UpdateTaskPayload } from './api';
+import type {
+  FetchTasksParams,
+  CreateTaskPayload,
+  UpdateTaskPayload,
+  CreateProjectPayload,
+} from './api';
 import {
   completeTask,
   createTask,
+  createProject,
   fetchProjects,
   fetchTask,
   fetchTasks,
@@ -11,7 +17,7 @@ import {
   updateTask,
   deleteTask,
 } from './api';
-import type { Task, TaskActionType } from '@/types/task';
+import type { Task, TaskActionType, Project } from '@/types/task';
 
 export const tasksQueryKeys = {
   all: ['tasks'] as const,
@@ -40,6 +46,22 @@ export function useProjects() {
   return useQuery({
     queryKey: tasksQueryKeys.projects,
     queryFn: fetchProjects,
+  });
+}
+
+export function useCreateProject() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: CreateProjectPayload) => createProject(payload),
+    onSuccess: (project) => {
+      queryClient.setQueryData<Project[] | undefined>(tasksQueryKeys.projects, (old) => {
+        if (!old) return [project];
+        const next = [...old, project];
+        return next.sort((a, b) => a.name.localeCompare(b.name));
+      });
+      queryClient.invalidateQueries({ queryKey: tasksQueryKeys.projects });
+      return project;
+    },
   });
 }
 

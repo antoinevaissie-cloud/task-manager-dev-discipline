@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useTasks } from '../hooks';
+import { useProjects, useTasks } from '../hooks';
 import type { Task } from '@/types/task';
 import { toDateKey, formatDisplayDate } from '@/utils/date';
 import { getSocket } from '@/realtime/socket';
@@ -24,15 +24,18 @@ type TaskBoardProps = {
 function TaskBoard({ onCreateTask, onEditTask }: TaskBoardProps) {
   const [selectedDateKey, setSelectedDateKey] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedProjectId, setSelectedProjectId] = useState<string>('');
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'card'>('list');
   const queryClient = useQueryClient();
   const debouncedSearch = useDebouncedValue(searchTerm, 250);
   const todayKey = useMemo(() => toDateKey(new Date()), []);
 
+  const { data: projects = [] } = useProjects();
   const { data: tasks = [], isLoading } = useTasks({
     status: 'Open',
-    search: debouncedSearch ? debouncedSearch : undefined,
+    search: debouncedSearch?.trim() ? debouncedSearch.trim() : undefined,
+    projectId: selectedProjectId ? selectedProjectId : undefined,
   });
 
   useEffect(() => {
@@ -60,6 +63,16 @@ function TaskBoard({ onCreateTask, onEditTask }: TaskBoardProps) {
       setSelectedTaskId(null);
     }
   }, [tasks, selectedTaskId]);
+
+  useEffect(() => {
+    setSelectedDateKey(null);
+  }, [selectedProjectId]);
+
+  useEffect(() => {
+    if (debouncedSearch) {
+      setSelectedDateKey(null);
+    }
+  }, [debouncedSearch]);
 
   const grouped = useMemo(() => {
     const map = new Map<string, Task[]>();
@@ -119,6 +132,19 @@ function TaskBoard({ onCreateTask, onEditTask }: TaskBoardProps) {
             <p className="hidden text-xs text-slate-500 md:block">
               Showing {visibleCount} of {tasks.length} tasks
             </p>
+            <select
+              value={selectedProjectId}
+              onChange={(event) => setSelectedProjectId(event.target.value)}
+              className="ml-auto w-48 rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
+            >
+              <option value="">All projects</option>
+              <option value="__unassigned__">Unassigned only</option>
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="flex items-center gap-2">

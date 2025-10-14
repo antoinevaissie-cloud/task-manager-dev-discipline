@@ -1,9 +1,12 @@
 export type Urgency = 'P1' | 'P2' | 'P3' | 'P4';
 export type TaskStatus = 'Open' | 'Completed';
+export type ProjectStatus = 'Open' | 'In Progress' | 'Completed';
 
 export type Project = {
   id: string;
   name: string;
+  description?: string | null;
+  status: ProjectStatus;
   _count?: {
     tasks: number;
   };

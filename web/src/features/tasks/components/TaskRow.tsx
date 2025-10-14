@@ -1,4 +1,4 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 import {
   FiArrowUp,
   FiArrowDown,
@@ -13,6 +13,7 @@ import {
   useCompleteTask,
   useMoveDueDate,
   useMovePriority,
+  useUpdateTask,
 } from '../hooks';
 
 type TaskRowProps = {
@@ -39,6 +40,13 @@ function TaskRow({ task, isSelected, onSelect }: TaskRowProps) {
   const movePriority = useMovePriority(task.id);
   const moveDueDate = useMoveDueDate(task.id);
   const complete = useCompleteTask(task.id);
+  const updateTask = useUpdateTask(task.id);
+  const [isEditingDueDate, setIsEditingDueDate] = useState(false);
+  const [dueDateDraft, setDueDateDraft] = useState(task.dueDate.slice(0, 10));
+
+  useEffect(() => {
+    setDueDateDraft(task.dueDate.slice(0, 10));
+  }, [task.dueDate]);
 
   const handleSelect = useCallback(() => {
     onSelect();
@@ -54,6 +62,24 @@ function TaskRow({ task, isSelected, onSelect }: TaskRowProps) {
     },
     [],
   );
+
+  const handleDueDateSubmit = useCallback(() => {
+    if (!dueDateDraft) {
+      setIsEditingDueDate(false);
+      setDueDateDraft(task.dueDate.slice(0, 10));
+      return;
+    }
+
+    if (dueDateDraft === task.dueDate.slice(0, 10)) {
+      setIsEditingDueDate(false);
+      return;
+    }
+
+    runAction(async () => {
+      await updateTask.mutateAsync({ dueDate: dueDateDraft });
+      setIsEditingDueDate(false);
+    });
+  }, [dueDateDraft, runAction, updateTask, task.dueDate]);
 
   return (
     <div
@@ -130,7 +156,44 @@ function TaskRow({ task, isSelected, onSelect }: TaskRowProps) {
           }}
         />
       </div>
-      <div className="text-sm">{formatDisplayDate(task.dueDate)}</div>
+      <div className="text-sm">
+        {isEditingDueDate ? (
+          <input
+            type="date"
+            value={dueDateDraft}
+            onChange={(event) => setDueDateDraft(event.target.value)}
+            onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                handleDueDateSubmit();
+              }
+              if (event.key === 'Escape') {
+                event.preventDefault();
+                setDueDateDraft(task.dueDate.slice(0, 10));
+                setIsEditingDueDate(false);
+              }
+            }}
+            onBlur={() => {
+              handleDueDateSubmit();
+            }}
+            autoFocus
+            className="rounded border border-slate-300 px-2 py-1 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
+          />
+        ) : (
+          <button
+            type="button"
+            className="rounded px-2 py-1 hover:bg-slate-100"
+            onClick={(event) => {
+              event.stopPropagation();
+              setIsEditingDueDate(true);
+            }}
+            title="Edit due date"
+          >
+            {formatDisplayDate(task.dueDate)}
+          </button>
+        )}
+      </div>
       <div className="truncate text-sm text-slate-800">{task.title}</div>
       <div className="truncate text-sm text-slate-500">
         {task.project?.name ?? task.projectId ?? '—'}

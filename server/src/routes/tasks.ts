@@ -61,9 +61,16 @@ router.get(
     });
 
     const filters = querySchema.parse(req.query);
+    const rawProjectId = filters.projectId;
     const tasks = await listTasks({
-      ...filters,
       status: filters.status === 'All' ? undefined : filters.status,
+      search: filters.search,
+      projectId:
+        rawProjectId === '__unassigned__'
+          ? null
+          : rawProjectId ?? undefined,
+      from: filters.from ?? null,
+      to: filters.to ?? null,
     });
     res.json({ data: tasks });
   }),
