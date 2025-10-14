@@ -171,13 +171,29 @@ serve(async (req) => {
     }
 
     // Upload documents to OpenAI
-    // Format as JSONL for OpenAI file upload
-    const jsonl = documents.map(doc => JSON.stringify(doc)).join('\n');
-    const blob = new Blob([jsonl], { type: 'application/jsonl' });
+    // Format as plain text with clear structure for better AI understanding
+    const textContent = documents.map(doc => {
+      return `--- TASK ---
+Title: ${doc.metadata.title}
+Priority: ${doc.metadata.urgency}
+Due Date: ${doc.metadata.due_date}
+Project: ${doc.metadata.project_name}
+Status: ${doc.metadata.status}
+Description: ${doc.metadata.description || 'No description'}
+Follow-up: ${doc.metadata.follow_up_item ? 'Yes' : 'No'}
+Created: ${doc.metadata.created_at}
+User ID: ${doc.metadata.user_id}
+Task ID: ${doc.metadata.task_id}
+
+${doc.content}
+`;
+    }).join('\n\n');
+
+    const blob = new Blob([textContent], { type: 'text/plain' });
 
     // Create file in OpenAI
     const formData = new FormData();
-    formData.append('file', blob, 'tasks.jsonl');
+    formData.append('file', blob, 'tasks.txt');
     formData.append('purpose', 'assistants');
 
     const uploadResponse = await fetch('https://api.openai.com/v1/files', {
