@@ -1,12 +1,9 @@
 -- Initial Schema for Task Manager
 -- This migration creates the core tables with Row Level Security
 
--- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
 -- Projects Table
 CREATE TABLE projects (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   description TEXT,
@@ -17,7 +14,7 @@ CREATE TABLE projects (
 
 -- Tasks Table
 CREATE TABLE tasks (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   description TEXT,
@@ -137,7 +134,7 @@ SECURITY DEFINER
 AS $$
 BEGIN
   RETURN QUERY
-  SELECT 
+  SELECT
     t.id,
     t.user_id,
     t.title,
@@ -157,7 +154,7 @@ BEGIN
     t.updated_at
   FROM tasks t
   LEFT JOIN projects p ON t.project_id = p.id
-  WHERE 
+  WHERE
     t.user_id = user_uuid
     AND (task_status IS NULL OR t.status = task_status)
     AND (search_term IS NULL OR t.title ILIKE '%' || search_term || '%' OR t.description ILIKE '%' || search_term || '%')
@@ -186,7 +183,7 @@ SECURITY DEFINER
 AS $$
 BEGIN
   RETURN QUERY
-  SELECT 
+  SELECT
     p.id,
     p.name,
     p.description,
@@ -203,4 +200,3 @@ BEGIN
   ORDER BY p.created_at DESC;
 END;
 $$;
-

@@ -12,7 +12,7 @@ export const tasksQueryKeys = {
 
 export function useTasks(params: TaskFilters) {
   const queryClient = useQueryClient();
-  
+
   const query = useQuery({
     queryKey: tasksQueryKeys.list(params),
     queryFn: () => supabaseApi.getTasks(params),
@@ -41,7 +41,7 @@ export function useTask(taskId: string | null) {
 
 export function useProjects() {
   const queryClient = useQueryClient();
-  
+
   const query = useQuery({
     queryKey: tasksQueryKeys.projects,
     queryFn: supabaseApi.getProjects,

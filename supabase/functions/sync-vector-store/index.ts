@@ -113,7 +113,7 @@ serve(async (req) => {
     const documents = tasks.map((task: Task) => {
       const projectName = task.project?.name || 'No Project';
       const description = task.description || 'No description';
-      
+
       // Format the content for embedding
       const content = [
         `Task: ${task.title}`,
@@ -155,7 +155,7 @@ serve(async (req) => {
     if (!vectorStoreId) {
       console.log('[VectorSync] No OPENAI_VECTOR_STORE_ID configured, skipping upload');
       console.log('[VectorSync] Documents prepared:', JSON.stringify(documents.slice(0, 2), null, 2));
-      
+
       return new Response(
         JSON.stringify({
           success: true,
@@ -249,4 +249,3 @@ serve(async (req) => {
     );
   }
 });
-
