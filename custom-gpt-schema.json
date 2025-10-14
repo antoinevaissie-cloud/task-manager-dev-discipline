@@ -1,0 +1,175 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Task Manager API",
+    "description": "API for querying personal tasks from Supabase",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://ihheipfihcgtzhujcmdn.supabase.co"
+    }
+  ],
+  "paths": {
+    "/rest/v1/tasks": {
+      "get": {
+        "summary": "Get tasks",
+        "description": "Retrieve user's tasks with optional filters",
+        "operationId": "getTasks",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filter by status (Open or Completed)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["Open", "Completed"]
+            }
+          },
+          {
+            "name": "urgency",
+            "in": "query",
+            "description": "Filter by priority level",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["P1", "P2", "P3", "P4"]
+            }
+          },
+          {
+            "name": "due_date",
+            "in": "query",
+            "description": "Filter by due date (format: YYYY-MM-DD)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "select",
+            "in": "query",
+            "description": "Columns to select",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "id,title,description,status,urgency,due_date,project_id,created_at"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of tasks",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string"
+                      },
+                      "urgency": {
+                        "type": "string"
+                      },
+                      "due_date": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "project_id": {
+                        "type": "string"
+                      },
+                      "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rest/v1/projects": {
+      "get": {
+        "summary": "Get projects",
+        "description": "Retrieve user's projects",
+        "operationId": "getProjects",
+        "parameters": [
+          {
+            "name": "select",
+            "in": "query",
+            "description": "Columns to select",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "id,name,description,status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of projects",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "apiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "apikey"
+      },
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "security": [
+    {
+      "apiKey": [],
+      "bearer": []
+    }
+  ]
+}
+
