@@ -1,58 +1,68 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type {
-  FetchTasksParams,
-  CreateTaskPayload,
-  UpdateTaskPayload,
-  CreateProjectPayload,
-} from './api';
-import {
-  completeTask,
-  createTask,
-  createProject,
-  fetchProjects,
-  fetchTask,
-  fetchTasks,
-  moveTaskDueDate,
-  moveTaskPriority,
-  updateTask,
-  deleteTask,
-} from './api';
-import type { Task, TaskActionType, Project } from '@/types/task';
+import { useEffect } from 'react';
+import * as supabaseApi from '@/api/supabase-tasks';
+import type { Task, TaskActionType, Project, TaskFilters } from '@/types/task';
 
 export const tasksQueryKeys = {
   all: ['tasks'] as const,
-  list: (params: FetchTasksParams = {}) => ['tasks', params] as const,
+  list: (params: TaskFilters = {}) => ['tasks', params] as const,
   detail: (taskId: string) => ['tasks', 'detail', taskId] as const,
   projects: ['projects'] as const,
 };
 
-export function useTasks(params: FetchTasksParams) {
-  return useQuery({
+export function useTasks(params: TaskFilters) {
+  const queryClient = useQueryClient();
+  
+  const query = useQuery({
     queryKey: tasksQueryKeys.list(params),
-    queryFn: () => fetchTasks(params),
+    queryFn: () => supabaseApi.getTasks(params),
     staleTime: 10 * 1000,
   });
+
+  // Set up real-time subscription
+  useEffect(() => {
+    const unsubscribe = supabaseApi.subscribeToTasks(() => {
+      queryClient.invalidateQueries({ queryKey: tasksQueryKeys.all });
+    });
+
+    return unsubscribe;
+  }, [queryClient]);
+
+  return query;
 }
 
 export function useTask(taskId: string | null) {
   return useQuery({
     queryKey: taskId ? tasksQueryKeys.detail(taskId) : ['tasks', 'detail', 'unknown'],
-    queryFn: () => fetchTask(taskId as string),
+    queryFn: () => supabaseApi.getTask(taskId as string),
     enabled: Boolean(taskId),
   });
 }
 
 export function useProjects() {
-  return useQuery({
+  const queryClient = useQueryClient();
+  
+  const query = useQuery({
     queryKey: tasksQueryKeys.projects,
-    queryFn: fetchProjects,
+    queryFn: supabaseApi.getProjects,
   });
+
+  // Set up real-time subscription
+  useEffect(() => {
+    const unsubscribe = supabaseApi.subscribeToProjects(() => {
+      queryClient.invalidateQueries({ queryKey: tasksQueryKeys.projects });
+    });
+
+    return unsubscribe;
+  }, [queryClient]);
+
+  return query;
 }
 
 export function useCreateProject() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: CreateProjectPayload) => createProject(payload),
+    mutationFn: (payload: Partial<Project>) => supabaseApi.createProject(payload),
     onSuccess: (project) => {
       queryClient.setQueryData<Project[] | undefined>(tasksQueryKeys.projects, (old) => {
         if (!old) return [project];
@@ -68,7 +78,7 @@ export function useCreateProject() {
 export function useCreateTask() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: createTask,
+    mutationFn: supabaseApi.createTask,
     onSuccess: (task) => {
       queryClient.setQueryData<Task[] | undefined>(tasksQueryKeys.list({ status: 'Open' }), (old) =>
         old ? [task, ...old] : [task],
@@ -81,7 +91,7 @@ export function useCreateTask() {
 export function useUpdateTask(taskId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: UpdateTaskPayload) => updateTask(taskId, payload),
+    mutationFn: (payload: Partial<Task>) => supabaseApi.updateTask(taskId, payload),
     onSuccess: (updated) => {
       queryClient.invalidateQueries({ queryKey: tasksQueryKeys.all });
       queryClient.setQueryData(tasksQueryKeys.detail(taskId), updated);
@@ -92,7 +102,7 @@ export function useUpdateTask(taskId: string) {
 export function useMovePriority(taskId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (direction: 'up' | 'down') => moveTaskPriority(taskId, direction),
+    mutationFn: (direction: 'up' | 'down') => supabaseApi.movePriority(taskId, direction),
     onMutate: async (direction) => {
       await queryClient.cancelQueries({ queryKey: tasksQueryKeys.all });
       const previous = queryClient.getQueriesData<Task[]>({ queryKey: tasksQueryKeys.all });
@@ -124,7 +134,14 @@ export function useMovePriority(taskId: string) {
 export function useMoveDueDate(taskId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (type: TaskActionType) => moveTaskDueDate(taskId, type),
+    mutationFn: (type: TaskActionType) => {
+      const offsetMap = {
+        nextDay: 'next_day' as const,
+        plusTwo: 'two_days' as const,
+        nextWeek: 'next_week' as const,
+      };
+      return supabaseApi.moveDate(taskId, offsetMap[type]);
+    },
     onMutate: async (type) => {
       await queryClient.cancelQueries({ queryKey: tasksQueryKeys.all });
       const previous = queryClient.getQueriesData<Task[]>({ queryKey: tasksQueryKeys.all });
@@ -156,7 +173,7 @@ export function useMoveDueDate(taskId: string) {
 export function useCompleteTask(taskId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: () => completeTask(taskId),
+    mutationFn: () => supabaseApi.completeTask(taskId),
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: tasksQueryKeys.all });
       const previous = queryClient.getQueriesData<Task[]>({ queryKey: tasksQueryKeys.all });
@@ -182,7 +199,7 @@ export function useCompleteTask(taskId: string) {
 export function useDeleteTask(taskId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: () => deleteTask(taskId),
+    mutationFn: () => supabaseApi.deleteTask(taskId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: tasksQueryKeys.all });
     },

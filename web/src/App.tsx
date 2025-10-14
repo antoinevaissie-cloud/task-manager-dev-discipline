@@ -1,9 +1,12 @@
 import { useState } from 'react';
+import { AuthProvider } from '@/contexts/AuthContext';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import UserMenu from '@/components/auth/UserMenu';
 import TaskBoard from '@/features/tasks/components/TaskBoard';
 import TaskFormDrawer from '@/features/tasks/components/TaskFormDrawer';
 import type { Task } from '@/types/task';
 
-function App() {
+function AppContent() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
@@ -34,6 +37,7 @@ function App() {
             Stay on top of your day. Tasks roll forward automatically.
           </p>
         </div>
+        <UserMenu />
       </header>
 
       <main className="relative min-h-[calc(100vh-4rem)]">
@@ -46,6 +50,16 @@ function App() {
         />
       </main>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <ProtectedRoute>
+        <AppContent />
+      </ProtectedRoute>
+    </AuthProvider>
   );
 }
 

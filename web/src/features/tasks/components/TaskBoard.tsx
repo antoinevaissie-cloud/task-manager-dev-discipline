@@ -3,9 +3,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useProjects, useTasks } from '../hooks';
 import type { Task } from '@/types/task';
 import { toDateKey, formatDisplayDate } from '@/utils/date';
-import { getSocket } from '@/realtime/socket';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import { FiList, FiGrid } from 'react-icons/fi';
+import { FiList, FiGrid, FiMenu } from 'react-icons/fi';
 import TaskSidebar from './TaskSidebar';
 import TaskTable from './TaskTable';
 import TaskDetailDrawer from './TaskDetailDrawer';
@@ -27,7 +26,7 @@ function TaskBoard({ onCreateTask, onEditTask }: TaskBoardProps) {
   const [selectedProjectId, setSelectedProjectId] = useState<string>('');
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'card'>('list');
-  const queryClient = useQueryClient();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const debouncedSearch = useDebouncedValue(searchTerm, 250);
   const todayKey = useMemo(() => toDateKey(new Date()), []);
 
@@ -37,26 +36,6 @@ function TaskBoard({ onCreateTask, onEditTask }: TaskBoardProps) {
     search: debouncedSearch?.trim() ? debouncedSearch.trim() : undefined,
     projectId: selectedProjectId ? selectedProjectId : undefined,
   });
-
-  useEffect(() => {
-    const socket = getSocket();
-    const invalidate = () =>
-      queryClient.invalidateQueries({
-        queryKey: ['tasks'],
-      });
-
-    socket.on('tasks:created', invalidate);
-    socket.on('tasks:updated', invalidate);
-    socket.on('tasks:completed', invalidate);
-    socket.on('tasks:deleted', invalidate);
-
-    return () => {
-      socket.off('tasks:created', invalidate);
-      socket.off('tasks:updated', invalidate);
-      socket.off('tasks:completed', invalidate);
-      socket.off('tasks:deleted', invalidate);
-    };
-  }, [queryClient]);
 
   useEffect(() => {
     if (selectedTaskId && !tasks.find((task) => task.id === selectedTaskId)) {
@@ -117,11 +96,23 @@ function TaskBoard({ onCreateTask, onEditTask }: TaskBoardProps) {
         onSelectDate={setSelectedDateKey}
         onClearSelection={() => setSelectedDateKey(null)}
         highlightDateKey={todayKey}
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
       />
 
       <section className="relative flex-1 overflow-hidden bg-white">
-        <div className="flex items-center justify-between gap-4 border-b border-slate-200 px-6 py-4">
+        <div className="flex items-center justify-between gap-4 border-b border-slate-200 px-4 py-4 sm:px-6">
           <div className="flex flex-1 items-center gap-3">
+            {/* Mobile hamburger menu */}
+            <button
+              type="button"
+              onClick={() => setIsSidebarOpen(true)}
+              className="rounded-md p-2 text-slate-600 hover:bg-slate-100 lg:hidden"
+              aria-label="Open sidebar"
+            >
+              <FiMenu className="h-5 w-5" />
+            </button>
+
             <input
               type="search"
               placeholder="Search Open Tasks"
@@ -135,7 +126,7 @@ function TaskBoard({ onCreateTask, onEditTask }: TaskBoardProps) {
             <select
               value={selectedProjectId}
               onChange={(event) => setSelectedProjectId(event.target.value)}
-              className="ml-auto w-48 rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
+              className="ml-auto hidden w-48 rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none sm:block"
             >
               <option value="">All projects</option>
               <option value="__unassigned__">Unassigned only</option>
