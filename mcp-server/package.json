@@ -1,0 +1,20 @@
+{
+  "name": "task-manager-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for task management integration with ChatGPT",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node simple-server.js",
+    "dev": "node --watch simple-server.js",
+    "mcp": "node index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@supabase/supabase-js": "^2.39.0",
+    "dotenv": "^16.3.1"
+  },
+  "keywords": ["mcp", "task-management", "openai", "chatgpt"],
+  "author": "Task Manager",
+  "license": "MIT"
+}

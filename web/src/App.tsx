@@ -1,15 +1,22 @@
 import { useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import AuthPage from '@/components/auth/AuthPage';
+import ResetPasswordPage from '@/components/auth/ResetPasswordPage';
+import ForgotPasswordPage from '@/components/auth/ForgotPasswordPage';
 import UserMenu from '@/components/auth/UserMenu';
 import TaskBoard from '@/features/tasks/components/TaskBoard';
 import TaskFormDrawer from '@/features/tasks/components/TaskFormDrawer';
+import { MultiAgentChat } from '@/components/chat/MultiAgentChat';
+import { AgentChatButton } from '@/components/chat/AgentChatButton';
 import type { Task } from '@/types/task';
 
 function AppContent() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
+  const [isAIChatOpen, setIsAIChatOpen] = useState(false);
 
   const openCreateForm = () => {
     setFormMode('create');
@@ -26,6 +33,20 @@ function AppContent() {
   const closeForm = () => {
     setIsFormOpen(false);
     setTaskToEdit(null);
+  };
+
+  const openAIChat = () => {
+    setIsAIChatOpen(true);
+  };
+
+  const closeAIChat = () => {
+    setIsAIChatOpen(false);
+  };
+
+  const handleTaskCreated = () => {
+    // This will trigger a refresh of the task list
+    // The TaskBoard component should handle this via React Query
+    window.location.reload();
   };
 
   return (
@@ -48,6 +69,13 @@ function AppContent() {
           task={taskToEdit ?? undefined}
           onClose={closeForm}
         />
+
+          {/* AI Chat Components - Multi-Agent System */}
+          <AgentChatButton onClick={openAIChat} />
+          <MultiAgentChat
+            isOpen={isAIChatOpen}
+            onClose={closeAIChat}
+          />
       </main>
     </div>
   );
@@ -55,11 +83,29 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
-      <ProtectedRoute>
-        <AppContent />
-      </ProtectedRoute>
-    </AuthProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/login" element={<AuthPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+          {/* Protected routes */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <AppContent />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Catch all - redirect to home */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 

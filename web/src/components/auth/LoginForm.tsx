@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { FiMail, FiLock, FiAlertCircle } from 'react-icons/fi';
 
@@ -8,6 +9,7 @@ interface LoginFormProps {
 
 export default function LoginForm({ onToggleMode }: LoginFormProps) {
   const { signIn, signInWithGoogle, signInWithGitHub } = useAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -87,9 +89,18 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-slate-700">
-            Password
-          </label>
+          <div className="flex items-center justify-between">
+            <label htmlFor="password" className="block text-sm font-medium text-slate-700">
+              Password
+            </label>
+            <button
+              type="button"
+              onClick={() => navigate('/forgot-password')}
+              className="text-sm font-medium text-blue-600 hover:text-blue-500"
+            >
+              Forgot password?
+            </button>
+          </div>
           <div className="relative mt-1">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
               <FiLock className="h-5 w-5 text-slate-400" />
@@ -184,4 +195,3 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
     </div>
   );
 }
-
