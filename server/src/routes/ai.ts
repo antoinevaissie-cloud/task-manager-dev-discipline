@@ -8,14 +8,22 @@ const router = express.Router();
 
 // Initialize Supabase client for database operations
 // Use service role key for server-side operations with explicit user context
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  throw new Error('Missing required environment variables: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY');
+}
+
+if (!process.env.OPENAI_API_KEY) {
+  throw new Error('Missing required environment variable: OPENAI_API_KEY');
+}
+
 const supabase = createClient(
-  process.env.SUPABASE_URL || 'https://ihheipfihcgtzhujcmdn.supabase.co',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || '***REMOVED_SUPABASE_SERVICE_ROLE_KEY***'
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
 // Initialize OpenAI with API key from environment (secure server-side only)
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || '***REMOVED_OPENAI_KEY***'
+  apiKey: process.env.OPENAI_API_KEY
 });
 
 // Define tools for the AI agent
